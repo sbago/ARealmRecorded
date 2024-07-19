@@ -137,8 +137,6 @@ public static unsafe class ReplayListUI
         ImGui.TableHeadersRow();
 
         var sortspecs = ImGui.TableGetSortSpecs();
-        Game.ReplayList = Game.ReplayList.Where(x => !x.Item1.Name.Contains("FFXIV_")).ToList();
-        if (Game.ReplayList == null) Game.ReplayList = new();
         if (sortspecs.SpecsDirty || needSort || ImGui.IsWindowAppearing())
         {
             if (sortspecs.Specs.ColumnIndex == 0)
@@ -179,16 +177,22 @@ public static unsafe class ReplayListUI
             {
                 using (ImGuiEx.StyleColorBlock.Begin(ImGuiCol.Text, ImGui.GetColorU32(ImGuiCol.TextDisabled), !isPlayable))
                 {
-                    if (ImGui.Selectable(autoRenamed ? $"◯ {displayName}##{path}" : $"{displayName}##{path}", path == Game.LastSelectedReplay && (agent == nint.Zero || *(byte*)(agent + 0x2C) == 100), ImGuiSelectableFlags.SpanAllColumns))
+                    try
                     {
-                        if (agent != nint.Zero)
+                        if (ImGui.Selectable(autoRenamed ? $"◯ {displayName}##{path}" : $"{displayName}##{path}", path == Game.LastSelectedReplay, ImGuiSelectableFlags.SpanAllColumns))
                         {
-                            //Game.SetDutyRecorderMenuSelection(agent, path, header);
-                            Game.CopyReplayIntoSlot(agent, new(path), header, 2);
-                            Game.SetDutyRecorderMenuSelection(agent, 2);
+                            if (agent != nint.Zero)
+                            {
+                                    Game.SetDutyRecorderMenuSelection(agent, path, header);
+                                    Game.CopyReplayIntoSlot(agent, new(path), header, 0);
+                            }
+                            else
+                                Game.LastSelectedReplay = path;
                         }
-                        else
-                            Game.LastSelectedReplay = path;
+                    }
+                    catch (Exception ex)
+                    {
+                        DalamudApi.LogDebug(ex.ToString());
                     }
                 }
 

@@ -308,7 +308,6 @@ public static unsafe class Game
     {
         try
         {
-            DalamudApi.LogDebug(replayFolder);
             var directory = new DirectoryInfo(replayFolder);
 
             var renamedDirectory = new DirectoryInfo(autoRenamedFolder);
@@ -479,6 +478,7 @@ public static unsafe class Game
     {
         *(byte*)(agent + 0x2C) = slot;
         *(byte*)(agent + 0x2A) = 1;
+        //use this call will init *(byte*)(agent + 0x2C);
         DisplaySelectedDutyRecording(agent);
     }
 
@@ -500,11 +500,15 @@ public static unsafe class Game
 
         try
         {
-            file.CopyTo(Path.Combine(replayFolder, GetReplaySlotName(slot)), true);
+            var path = new FileInfo(Path.Combine(replayFolder, GetReplaySlotName(slot)));
+            if (path.FullName != file.FullName)
+            {
+                file.CopyTo(path.FullName, true);
+            }
             header.localCID = DalamudApi.ClientState.LocalContentId;
             Common.ContentsReplayModule->savedReplayHeaders[slot] = header;
             SetDutyRecorderMenuSelection(agent, slot);
-            GetReplayList();
+            //GetReplayList();
         }
         catch (Exception e)
         {
